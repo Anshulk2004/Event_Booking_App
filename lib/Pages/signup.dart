@@ -1,3 +1,4 @@
+import 'package:event_booking/services/auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUp extends StatefulWidget {
@@ -11,10 +12,10 @@ class _SignUpState extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: Stack(
-        children: [          
+        children: [
           Container(
             width: size.width,
             height: size.height,
@@ -25,17 +26,16 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
           ),
-          
-          
+
           Container(
             width: size.width,
             height: size.height,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFF5F5F5).withOpacity(0.7),  
-                  const Color(0xFFFAFAFA).withOpacity(0.7),  
-                  const Color(0xFFFFF8E1).withOpacity(0.7),  
+                  const Color(0xFFF5F5F5).withOpacity(0.7),
+                  const Color(0xFFFAFAFA).withOpacity(0.7),
+                  const Color(0xFFFFF8E1).withOpacity(0.7),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -47,7 +47,7 @@ class _SignUpState extends State<SignUp> {
           // Content
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [              
+            children: [
               Container(
                 // width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -65,22 +65,20 @@ class _SignUpState extends State<SignUp> {
                   "FESTHUB",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 64.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                    letterSpacing: 2.0,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black,
-                        offset: Offset(0,4),
-                        blurRadius: 8,
-                      )
-                    ]
-                  ),
+                      fontSize: 64.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                      letterSpacing: 2.0,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black,
+                          offset: Offset(0, 4),
+                          blurRadius: 8,
+                        )
+                      ]),
                 ),
               ),
-
-              const SizedBox(height: 144.0),              
+              const SizedBox(height: 144.0),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
@@ -116,8 +114,6 @@ class _SignUpState extends State<SignUp> {
                       ),
                     ),
                     const SizedBox(height: 45.0),
-                    
-                    
                     Container(
                       width: double.infinity,
                       height: 60,
@@ -144,7 +140,7 @@ class _SignUpState extends State<SignUp> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(30),
                           onTap: () {
-                            // Add sign-in logic here
+                            AuthMethods().signInWithGoogle(context);
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

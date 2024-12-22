@@ -1,7 +1,12 @@
+// ignore: unused_import
+// ignore_for_file: unused_import, duplicate_ignore
+
 import 'package:event_booking/Pages/bottomNav.dart';
 import 'package:event_booking/Pages/detail.dart';
+import 'package:event_booking/Pages/signup.dart';
 // import 'package:event_booking/Pages/detail_page.dart';
 import 'package:flutter/material.dart';
+// ignore: unused_import
 import 'Pages/home.dart';
 
 void main() {
@@ -36,7 +41,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Detail()
+      home: const SignUp()
     );
   }
 }

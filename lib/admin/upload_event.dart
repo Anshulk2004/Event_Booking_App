@@ -1,5 +1,12 @@
+// ignore_for_file: unused_import
+
+import 'dart:io';
+import 'package:event_booking/services/database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:random_string/random_string.dart';
 
 class UploadEvent extends StatefulWidget {
   const UploadEvent({super.key});
@@ -9,21 +16,24 @@ class UploadEvent extends StatefulWidget {
 }
 
 class _UploadEventState extends State<UploadEvent> {
+  File? selectedImage;
   String? selectedCategory;
   String? selectedAgeLimit;
   String? selectedTime;
   DateTime? selectedDate;
+  final ImagePicker _picker = ImagePicker();
   final TextEditingController eventNameController = TextEditingController();
   final TextEditingController organizedByController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   final TextEditingController detailsController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
 
   final List<String> categories = [
     'Fashion Shows',
     'Comedy Shows',
     'Movies',
     'Party',
-    'Musical Shows'
+    'Musical Shows' 
   ];
 
   final List<String> ageLimits = [
@@ -112,39 +122,58 @@ class _UploadEventState extends State<UploadEvent> {
                 SizedBox(height: 30.0),
 
                 // Event Image
-                Center(
-                  child: Container(
-                    height: 150,
-                    width: 150,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black38, width: 2.0),
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.camera_alt_outlined, size: 35),
-                        SizedBox(height: 8),
-                        Text(
-                          "Add Event Photo",
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 16,
+                GestureDetector(
+                  onTap: getImage,
+                  child: Center(
+                    child: Container(
+                      height: 150,
+                      width: 150,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black38, width: 2.0),
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Image.file(
+                                selectedImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt_outlined, size: 35),
+                                SizedBox(height: 8),
+                                Text(
+                                  "Add Event Photo",
+                                  style: TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
-                ),
+                ),                
 
+                SizedBox(height: 30.0),
+
+                //Event Name
+                _buildLabel("Event Name"),
+                _buildInputField(
+                  controller: eventNameController,
+                  hint: "Enter event name",
+                ),
                 SizedBox(height: 30.0),
 
                 // Event Category
@@ -159,7 +188,7 @@ class _UploadEventState extends State<UploadEvent> {
 
                 SizedBox(height: 20.0),
 
-                // Organized By and Date Row
+                // Organized By and Date Row and location
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -173,6 +202,14 @@ class _UploadEventState extends State<UploadEvent> {
                     // Date
                     _buildLabel("Date"),
                     _buildDateField(),
+                    SizedBox(height: 20.0),
+
+                    // Location     
+                    _buildLabel("Location"),
+                    _buildInputField(
+                      controller: locationController,
+                      hint: "Enter event location",
+                    ),
                     SizedBox(height: 20.0),
 
                     // Age Limit
@@ -230,9 +267,10 @@ class _UploadEventState extends State<UploadEvent> {
                     controller: detailsController,
                     maxLines: 4,
                     maxLength: 200,
-                    decoration: InputDecoration(                      
+                    decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: "Enter Details",hintStyle: TextStyle(
+                      hintText: "Enter Details",
+                      hintStyle: TextStyle(
                         color: Colors.black54,
                         fontSize: 14,
                       ),
@@ -245,9 +283,7 @@ class _UploadEventState extends State<UploadEvent> {
                 // Submit Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Handle submit
-                    },
+                    onPressed: uploadEvent,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF2196F3),
                       foregroundColor: Colors.white,
@@ -273,6 +309,94 @@ class _UploadEventState extends State<UploadEvent> {
         ),
       ),
     );
+  }
+
+  Future getImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        selectedImage = File(image.path);
+      });
+    }
+  }
+
+  Future<void> uploadEvent() async {
+    if (selectedImage == null ||
+      eventNameController.text.trim().isEmpty ||
+      organizedByController.text.trim().isEmpty ||
+      priceController.text.trim().isEmpty ||
+      locationController.text.trim().isEmpty ||
+      selectedCategory == null ||
+      selectedAgeLimit == null ||
+      selectedDate == null ||
+      selectedTime == null ||
+      detailsController.text.trim().isEmpty) {
+        
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("All fields including image are required"),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+    try {
+      // String addId = randomAlphaNumeric(10);
+      // Reference firebaseStorageRef = FirebaseStorage.instance
+      //     .ref()
+      //     .child("Event Images")
+      //     .child(addId);
+
+      // final uploadTask = firebaseStorageRef.putFile(selectedImage!);
+      // var downloadUrl = await (await uploadTask).ref.getDownloadURL();
+
+      String id = randomAlphaNumeric(10);
+      Map<String, dynamic> eventData = {
+        "image": "",
+        "name": eventNameController.text,
+        "organizedBy": organizedByController.text,
+        "price": priceController.text,
+        "category": selectedCategory,
+        "ageLimit": selectedAgeLimit,
+        "date": selectedDate?.toIso8601String(),
+        "time": selectedTime,
+        "location": locationController.text,
+        "details": detailsController.text,
+      };
+
+      await DatabaseMethods().addEvent(eventData, id);
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Event uploaded successfully",
+            style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+
+      // Reset
+      setState(() {
+        selectedImage = null;
+        eventNameController.clear();
+        organizedByController.clear();
+        priceController.clear();
+        detailsController.clear();
+        selectedCategory = null;
+        selectedAgeLimit = null;
+        selectedTime = null;
+        selectedDate = null;
+        locationController.clear();
+      });
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error uploading event: $e")),
+      );
+    }
   }
 
   Widget _buildLabel(String text) {
@@ -360,11 +484,13 @@ class _UploadEventState extends State<UploadEvent> {
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 14,color: Colors.black54),
+          hintStyle: TextStyle(fontSize: 14, color: Colors.black54),
           prefixText: prefix,
           contentPadding: EdgeInsets.symmetric(vertical: 16.0),
         ),
-        style: TextStyle(fontSize: 16,),
+        style: TextStyle(
+          fontSize: 16,
+        ),
       ),
     );
   }
@@ -438,3 +564,4 @@ class _UploadEventState extends State<UploadEvent> {
     );
   }
 }
+

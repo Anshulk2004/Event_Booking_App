@@ -38,6 +38,7 @@ class AuthMethods {
     await DatabaseMethods()
         .addUserDetail(userData, userDetails.uid)
         .then((value) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: Colors.red,
           content: Text(
@@ -48,6 +49,7 @@ class AuthMethods {
             ),
           )));
       Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context, MaterialPageRoute(builder: (context) => BottomNav()));
     });
   }

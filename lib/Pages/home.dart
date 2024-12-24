@@ -37,6 +37,7 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
+    DatabaseMethods().updateExistingEventsWithId();
     ontheload();
     super.initState();
   }
@@ -112,7 +113,8 @@ class _HomeState extends State<Home> {
                           price: ds['price'] ?? "0",
                           organizedBy: ds['organizedBy'] ?? "",
                           ageLimit: ds['ageLimit'] ?? "All ages",
-                          image: ds['image'] ?? "Images/party.jpg",
+                          image: ds['image'] ?? "Images/party.jpg", 
+                           eventId: ds.id, 
                         ),
                       ),
                     );

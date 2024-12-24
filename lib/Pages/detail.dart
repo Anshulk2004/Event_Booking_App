@@ -1,8 +1,14 @@
+import 'package:event_booking/services/shared_pref.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:event_booking/services/data.dart';
+import 'package:event_booking/services/stripepayment.dart';
 
 class Detail extends StatefulWidget {
   final String eventName;
   final String date;
+  final String eventId;
   final String time;
   final String location;
   final String category;
@@ -16,6 +22,7 @@ class Detail extends StatefulWidget {
     super.key,
     required this.eventName,
     required this.date,
+    required this.eventId,
     required this.time,
     required this.location,
     required this.category,
@@ -35,40 +42,160 @@ class _DetailState extends State<Detail> {
   late double ticketPrice;
   bool showTerms = false;
 
+  String userName = "";
+  String userEmail = "";
+  String userImage = "";
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
     ticketPrice = double.tryParse(widget.price) ?? 999.0;
+    Stripe.publishableKey = publishablekey;
+    loadUserData();
+  }
+
+  Future<void> loadUserData() async {
+    setState(() => isLoading = true);
+    try {
+      userName = await SharedPreferenceHelper.getUserName() ?? "";
+      userEmail = await SharedPreferenceHelper.getUserEmail() ?? "";
+      userImage = await SharedPreferenceHelper.getUserImage() ?? "";
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error loading user data: $e");
+      }
+    }
+    setState(() => isLoading = false);
+  }
+
+  Future<void> handlePayment() async {
+    if (isLoading) return;
+    setState(() => isLoading = true);
+
+    try {
+      final amount = (ticketPrice * numberOfTickets).toStringAsFixed(2);
+
+      if (kDebugMode) {
+      print('Processing payment: Amount: $amount, EventId: ${widget.eventId}');
+    }
+
+      await StripePaymentService.makePayment(
+        amount: amount,
+        eventName: widget.eventName,
+        eventId: widget.eventId,
+        location: widget.location,
+        date: widget.date,
+        numberOfTickets: numberOfTickets,
+        ticketPrice: ticketPrice,
+        onSuccess: () {
+          setState(() => isLoading = false);
+          showSuccessDialog();
+        },
+        onError: (String message) {
+          setState(() => isLoading = false);
+          showErrorDialog(message);
+        },
+      );
+    } catch (e) {
+      setState(() => isLoading = false);
+      if (kDebugMode) {
+        print('Payment error: $e');
+      }
+      showErrorDialog('Payment failed. Please try again.');
+    }
+  }
+
+
+  // Show success dialog
+  void showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Payment Successful!\nYour tickets have been booked.",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Optionally navigate back to events list
+              // Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   String formatDateAndTime(String date, String time) {
-  try {
-    // Handle the specific format from your screenshot
-    // Input format example: "2025-01-26T00:00:00.000"
-    DateTime dateTime = DateTime.parse(date);
-    
-    // Format day with suffix
-    String day = dateTime.day.toString();
-    String suffix = 'th';
-    if (day.endsWith('1') && day != '11') suffix = 'st';
-    if (day.endsWith('2') && day != '12') suffix = 'nd';
-    if (day.endsWith('3') && day != '13') suffix = 'rd';
-    
-    // Get month name
-    List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    String month = months[dateTime.month - 1];
-    
-    // Parse time (assuming format "19:00")
-    int hour = int.parse(time.split(':')[0]);
-    String period = hour >= 12 ? 'PM' : 'AM';
-    hour = hour > 12 ? hour - 12 : hour;
-    hour = hour == 0 ? 12 : hour;
-    
-    return "$day$suffix $month ${dateTime.year}, $hour:00 $period";
-  } catch (e) {
-    return "$date $time";
+    try {
+      DateTime dateTime = DateTime.parse(date);
+      String day = dateTime.day.toString();
+      String suffix = 'th';
+      if (day.endsWith('1') && day != '11') suffix = 'st';
+      if (day.endsWith('2') && day != '12') suffix = 'nd';
+      if (day.endsWith('3') && day != '13') suffix = 'rd';
+
+      List<String> months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+      ];
+      String month = months[dateTime.month - 1];
+      int hour = int.parse(time.split(':')[0]);
+      String period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour > 12 ? hour - 12 : hour;
+      hour = hour == 0 ? 12 : hour;
+
+      return "$day$suffix $month ${dateTime.year}, $hour:00 $period";
+    } catch (e) {
+      return "$date $time";
+    }
   }
-}
 
   final List<Map<String, String>> otherEvents = [
     {'name': 'EDM Night Fever', 'image': 'Images/party.jpg'},
@@ -174,180 +301,180 @@ class _DetailState extends State<Detail> {
           ),
         ),
         Container(
-        height: MediaQuery.of(context).size.height / 2.5,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
-            ],
+          height: MediaQuery.of(context).size.height / 2.5,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(0.7),
+              ],
+            ),
           ),
         ),
-      ),
         SizedBox(
-          height: MediaQuery.of(context).size.height / 2.5,          
+          height: MediaQuery.of(context).size.height / 2.5,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            _buildBackButton(),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.eventName,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
+              _buildBackButton(),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.eventName,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _buildHeaderInfo(
-                        Icons.calendar_today,
-                        formatDateAndTime(widget.date, widget.time),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildHeaderInfo(
-                        Icons.location_on,
-                        widget.location,
-                      ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        _buildHeaderInfo(
+                          Icons.calendar_today,
+                          formatDateAndTime(widget.date, widget.time),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildHeaderInfo(
+                          Icons.location_on,
+                          widget.location,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
-Widget _buildHeaderInfo(IconData icon, String text) {
-  return Container(
-    margin: const EdgeInsets.only(right: 16),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.6),
-      borderRadius: BorderRadius.circular(30),
-      border: Border.all(
-        color: Colors.white.withOpacity(0.2),
-        width: 1,
-      ),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 16,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            ],
           ),
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-  Widget _buildBackButton() {
-  return Padding(
-    padding: const EdgeInsets.only(top: 40, left: 20),
-    child: GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-        child: const Icon(
-          Icons.arrow_back_ios_new,
-          color: Colors.white,
-          size: 20,
+  Widget _buildHeaderInfo(IconData icon, String text) {
+    return Container(
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
         ),
       ),
-    ),
-  );
-}
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40, left: 20),
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
 
   // ignore: unused_element
   Widget _buildEventTitle() {
-  return Container(
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [
-          Colors.black.withOpacity(0.8),
-          Colors.transparent,
-        ],
-      ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.eventName,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.8,
-              ),
-              child: _buildHeaderChip(
-                Icons.calendar_today, 
-                formatDateAndTime(widget.date, widget.time),
-              ),
-            ),
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.8,
-              ),
-              child: _buildHeaderChip(
-                Icons.location_on, 
-                widget.location,
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            Colors.black.withOpacity(0.8),
+            Colors.transparent,
           ],
         ),
-      ],
-    ),
-  );
-}
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.eventName,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.8,
+                ),
+                child: _buildHeaderChip(
+                  Icons.calendar_today,
+                  formatDateAndTime(widget.date, widget.time),
+                ),
+              ),
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.8,
+                ),
+                child: _buildHeaderChip(
+                  Icons.location_on,
+                  widget.location,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildAboutSection() {
     return Column(
@@ -385,83 +512,84 @@ Widget _buildHeaderInfo(IconData icon, String text) {
   }
 
   Widget _buildHeaderChip(IconData icon, String label) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.2),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.white, size: 16),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildFeatureChips() {
-  return Wrap(
-    spacing: 12,
-    runSpacing: 12,
-    alignment: WrapAlignment.start,
-    children: [
-      SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2, // Account for padding and spacing
-        child: _buildInfoChip(Icons.person_outline, widget.ageLimit),
-      ),
-      SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2,
-        child: _buildInfoChip(Icons.access_time, widget.time),
-      ),
-      SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2,
-        child: _buildInfoChip(Icons.location_on, widget.location),
-      ),
-      SizedBox(
-        width: (MediaQuery.of(context).size.width - 52) / 2,
-        child: _buildInfoChip(Icons.category, widget.category),
-      ),
-    ],
-  );
-}
-
-  Widget _buildInfoChip(IconData icon, String label) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: Colors.blue[100],
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      alignment: WrapAlignment.start,
       children: [
-        Icon(icon, color: Colors.black87, size: 18),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
+        SizedBox(
+          width: (MediaQuery.of(context).size.width - 52) /
+              2, // Account for padding and spacing
+          child: _buildInfoChip(Icons.person_outline, widget.ageLimit),
+        ),
+        SizedBox(
+          width: (MediaQuery.of(context).size.width - 52) / 2,
+          child: _buildInfoChip(Icons.access_time, widget.time),
+        ),
+        SizedBox(
+          width: (MediaQuery.of(context).size.width - 52) / 2,
+          child: _buildInfoChip(Icons.location_on, widget.location),
+        ),
+        SizedBox(
+          width: (MediaQuery.of(context).size.width - 52) / 2,
+          child: _buildInfoChip(Icons.category, widget.category),
         ),
       ],
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.blue[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black87, size: 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildTicketSection() {
     return Column(
@@ -768,7 +896,7 @@ Widget _buildHeaderInfo(IconData icon, String text) {
           const SizedBox(width: 20),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: isLoading ? null : handlePayment,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -777,14 +905,24 @@ Widget _buildHeaderInfo(IconData icon, String text) {
                 ),
                 elevation: 2,
               ),
-              child: const Text(
-                "Book Now",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+
+              child: isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "Book Now",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ],

@@ -1,19 +1,26 @@
 // ignore: unused_import
 // ignore_for_file: unused_import, duplicate_ignore
 
+import 'package:event_booking/Pages/booking.dart';
 import 'package:event_booking/Pages/bottomNav.dart';
 import 'package:event_booking/Pages/detail.dart';
 import 'package:event_booking/Pages/signup.dart';
 import 'package:event_booking/admin/upload_event.dart';
+import 'package:event_booking/services/data.dart';
 import 'package:firebase_core/firebase_core.dart';
 // import 'package:event_booking/Pages/detail_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 // ignore: unused_import
 import 'Pages/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp();
+  
+  Stripe.publishableKey = publishablekey;
+  await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 
@@ -24,7 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
+        title: 'Flutter Demo',        
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           // This is the theme of your application.
@@ -45,7 +52,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const Home());
+        home: const Booking());
   }
 }
 

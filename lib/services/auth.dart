@@ -1,5 +1,6 @@
 import 'package:event_booking/Pages/bottomnav.dart';
 import 'package:event_booking/services/database.dart';
+import 'package:event_booking/services/shared_pref.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -28,8 +29,14 @@ class AuthMethods {
     UserCredential result = await firebaseAuth.signInWithCredential(credential);
 
     User? userDetails = result.user;
+    await SharedPreferenceHelper.saveUserId(userDetails!.uid);
+    await SharedPreferenceHelper.saveUserName(userDetails.displayName ?? "");
+    await SharedPreferenceHelper.saveUserEmail(userDetails.email ?? "");
+    await SharedPreferenceHelper.saveUserImage(userDetails.photoURL ?? "");
+    await SharedPreferenceHelper.saveIsLoggedIn(true);
+
     Map<String, dynamic> userData = {
-      "Name": userDetails!.displayName,
+      "Name": userDetails.displayName,
       "Email": userDetails.email,
       "Image": userDetails.photoURL,
       "Id": userDetails.uid,
@@ -52,5 +59,11 @@ class AuthMethods {
           // ignore: use_build_context_synchronously
           context, MaterialPageRoute(builder: (context) => BottomNav()));
     });
+  }
+
+  Future<void> signOut(BuildContext context) async {
+    await auth.signOut();
+    await SharedPreferenceHelper.clearUserData(); // Clear stored user data
+    // Navigate to your login screen or wherever needed
   }
 }

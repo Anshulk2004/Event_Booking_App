@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:event_booking/Pages/allevents.dart';
 import 'package:event_booking/Pages/detail.dart';
 import 'package:event_booking/services/database.dart';
 import 'package:flutter/material.dart';
@@ -49,32 +50,36 @@ class _HomeState extends State<Home> {
   }
 
   ontheload() async {
-    eventStream = await DatabaseMethods().getAllEvents();
+    eventStream = await FirebaseFirestore.instance
+        .collection("Event")
+        .orderBy('date', descending: false)
+        .limit(3)
+        .snapshots();
     setState(() {});
   }
 
-  Widget categoryCards() {  
-  final List<Map<String, String>> categories = [
-    {"name": "Party", "image": "Images/party.jpg"},
-    {"name": "Musical Shows", "image": "Images/party.jpg"},
-    {"name": "Comedy Shows", "image": "Images/party.jpg"},
-    {"name": "Fashion Shows", "image": "Images/party.jpg"},
-    {"name": "Movies", "image": "Images/party.jpg"},
-  ];
+  Widget categoryCards() {
+    final List<Map<String, String>> categories = [
+      {"name": "Party", "image": "Images/party.jpg"},
+      {"name": "Musical Shows", "image": "Images/music.jpg"},
+      {"name": "Comedy Shows", "image": "Images/comedy.jpg"},
+      {"name": "Fashion Shows", "image": "Images/clothing.jpg"},
+      {"name": "Movies", "image": "Images/movie.jpg"},
+    ];
 
-  return SizedBox(
-    height: 110,
-    child: ListView(
-      scrollDirection: Axis.horizontal,
-      children: categories
-          .map((category) => EventCategoryCard(
-                image: category["image"]!,
-                category: category["name"]!,
-              ))
-          .toList(),
-    ),
-  );
-}
+    return SizedBox(
+      height: 110,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: categories
+            .map((category) => EventCategoryCard(
+                  image: category["image"]!,
+                  category: category["name"]!,
+                ))
+            .toList(),
+      ),
+    );
+  }
 
   Widget allEvents() {
     return StreamBuilder(
@@ -91,25 +96,25 @@ class _HomeState extends State<Home> {
                   DocumentSnapshot ds = snapshot.data.docs[index];
                   return GestureDetector(
                     onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Detail(
-                          eventName: ds['name'] ?? "Event Name",
-                          date: ds['date'] ?? "",
-                          time: ds['time'] ?? "",
-                          location: ds['location'] ?? "Location",
-                          category: ds['category'] ?? "Event",
-                          details: ds['details'] ?? "",
-                          price: ds['price'] ?? "0",
-                          organizedBy: ds['organizedBy'] ?? "",
-                          ageLimit: ds['ageLimit'] ?? "All ages",
-                          image: ds['image'] ?? "Images/party.jpg", 
-                           eventId: ds.id, 
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Detail(
+                            eventName: ds['name'] ?? "Event Name",
+                            date: ds['date'] ?? "",
+                            time: ds['time'] ?? "",
+                            location: ds['location'] ?? "Location",
+                            category: ds['category'] ?? "Event",
+                            details: ds['details'] ?? "",
+                            price: ds['price'] ?? "0",
+                            organizedBy: ds['organizedBy'] ?? "",
+                            ageLimit: ds['ageLimit'] ?? "All ages",
+                            image: ds['image'] ?? "Images/party.jpg",
+                            eventId: ds.id,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 15.0),
                       width: MediaQuery.of(context).size.width,
@@ -353,10 +358,10 @@ class _HomeState extends State<Home> {
                 const SizedBox(height: 20.0),
                 categoryCards(),
                 const SizedBox(height: 20.0),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       "Upcoming Events",
                       style: TextStyle(
                         color: Colors.black87,
@@ -364,19 +369,41 @@ class _HomeState extends State<Home> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(right: 10.0),
-                      child: Text(
-                        "See all",
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                    Container(
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,  
+        borderRadius: BorderRadius.circular(20), 
+        border: Border.all(
+          color: Colors.blue.shade200, 
+          width: 1,
+        ),
+      ),
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AllEvents(),
+            ),
+          );
+        },
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          minimumSize: Size.zero, 
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap, 
+        ),
+        child: Text(
+          "See all",
+          style: TextStyle(
+            color: Colors.blue.shade700, 
+            fontWeight: FontWeight.w500,
+            fontSize: 16.0,
+          ),
+        ),
+      ),
+    ),
+  ],
+),
                 const SizedBox(height: 15.0),
                 allEvents(),
               ],

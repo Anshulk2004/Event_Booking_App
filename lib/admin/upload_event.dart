@@ -450,6 +450,22 @@ class _UploadEventState extends State<UploadEvent> {
 
       await DatabaseMethods().addEvent(eventData, id);
 
+      setState(() {
+        eventNameController.clear();
+        organizedByController.clear();
+        priceController.clear();
+        detailsController.clear();
+        locationController.clear();
+        selectedCategory = null;
+        selectedAgeLimit = null;
+        selectedTime = null;
+        selectedDate = null;
+        selectedImage = null;
+
+        // Reset form validation state
+        _formKey.currentState?.reset();
+      });
+
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -461,19 +477,18 @@ class _UploadEventState extends State<UploadEvent> {
           duration: Duration(seconds: 2),
         ),
       );
-
-      await Future.delayed(const Duration(seconds: 2));
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error uploading event: $e")),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
+  }catch (e) {
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error uploading event: $e"),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    setState(() => isLoading = false);
   }
+}
 
   Widget _buildSubmitButton() {
     return Center(

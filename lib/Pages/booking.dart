@@ -18,7 +18,7 @@ class _BookingState extends State<Booking> {
   Stream? bookingsStream;
   String userName = "";
   String userEmail = "";
-  
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +33,6 @@ class _BookingState extends State<Booking> {
   }
 
   getBookings() async {
-    // String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
     bookingsStream = await DatabaseMethods().getUserBookings(widget.userId);
     setState(() {});
   }
@@ -72,27 +71,30 @@ class _BookingState extends State<Booking> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
                   children: [
-                    const Text(
-                      "My Bookings",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.black54,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "My Bookings",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -103,36 +105,38 @@ class _BookingState extends State<Booking> {
                   builder: (context, AsyncSnapshot snapshot) {
                     return snapshot.hasData
                         ? ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             itemCount: snapshot.data.docs.length,
                             itemBuilder: (context, index) {
                               DocumentSnapshot ds = snapshot.data.docs[index];
                               return Container(
-                                margin: const EdgeInsets.only(bottom: 20),
+                                margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
                                 child: Column(
                                   children: [
                                     Container(
-                                      height: 150,
+                                      height: 120,
                                       decoration: BoxDecoration(
                                         borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(20),
+                                          top: Radius.circular(16),
                                         ),
                                         image: DecorationImage(
-                                          image: const AssetImage("Images/party.jpg"),
+                                          image:
+                                              const AssetImage("Images/party.jpg"),
                                           fit: BoxFit.cover,
                                           colorFilter: ColorFilter.mode(
-                                            Colors.black.withOpacity(0.2),
+                                            Colors.black.withOpacity(0.1),
                                             BlendMode.darken,
                                           ),
                                         ),
@@ -140,24 +144,27 @@ class _BookingState extends State<Booking> {
                                       child: Stack(
                                         children: [
                                           Positioned(
-                                            top: 15,
-                                            right: 15,
+                                            top: 12,
+                                            right: 12,
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 6,
+                                                horizontal: 10,
+                                                vertical: 4,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: ds['paymentStatus'] == 'Completed'
+                                                color: ds['paymentStatus'] ==
+                                                        'Completed'
                                                     ? Colors.green
                                                     : Colors.orange,
-                                                borderRadius: BorderRadius.circular(20),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: Text(
                                                 ds['paymentStatus'] ?? 'Pending',
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
                                                 ),
                                               ),
                                             ),
@@ -166,75 +173,50 @@ class _BookingState extends State<Booking> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.all(20),
+                                      padding: const EdgeInsets.all(12),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             ds['eventName'] ?? 'Event Name',
                                             style: const TextStyle(
-                                              fontSize: 24,
+                                              fontSize: 20,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black87,
                                             ),
                                           ),
-                                          const SizedBox(height: 15),
+                                          const SizedBox(height: 8),
                                           Row(
                                             children: [
-                                              const Icon(
-                                                Icons.calendar_today,
-                                                size: 20,
+                                              _buildInfoRow(
+                                                icon: Icons.calendar_today,
+                                                text: formatDateTime(ds['date']),
                                                 color: Colors.blue,
                                               ),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                formatDateTime(ds['date']),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 20),
-                                              const Icon(
-                                                Icons.access_time,
-                                                size: 20,
+                                              const SizedBox(width: 16),
+                                              _buildInfoRow(
+                                                icon: Icons.access_time,
+                                                text: formatTime(ds['date']),
                                                 color: Colors.blue,
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                formatTime(ds['date']),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.black87,
-                                                ),
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 15),
+                                          const SizedBox(height: 8),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.people,
-                                                    size: 20,
-                                                    color: Colors.purple,
-                                                  ),
-                                                  const SizedBox(width: 10),
-                                                  Text(
+                                              _buildInfoRow(
+                                                icon: Icons.people,
+                                                text:
                                                     "${ds['numberOfTickets']} tickets",
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
+                                                color: Colors.purple,
                                               ),
                                               Text(
                                                 "₹${ds['totalAmount']}",
                                                 style: const TextStyle(
-                                                  fontSize: 20,
+                                                  fontSize: 18,
                                                   fontWeight: FontWeight.bold,
                                                   color: Colors.green,
                                                 ),
@@ -259,6 +241,32 @@ class _BookingState extends State<Booking> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: color,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.black87.withOpacity(0.8),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

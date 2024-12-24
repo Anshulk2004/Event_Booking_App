@@ -8,6 +8,7 @@ class SharedPreferenceHelper {
   static const String userImageKey = "USER_IMAGE_KEY";
   static const String isLoggedInKey = "IS_LOGGED_IN_KEY";
   static const String userTokenKey = "USER_TOKEN_KEY";
+  static String isAdminKey = "ISADMINKEY";
   
   // Save Methods
   static Future<bool> saveUserId(String getUserId) async {
@@ -33,6 +34,11 @@ class SharedPreferenceHelper {
   static Future<bool> saveUserToken(String getUserToken) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(userTokenKey, getUserToken);
+  }
+
+  static Future<bool> saveIsAdmin(bool isAdmin) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(isAdminKey, isAdmin);
   }
 
   static Future<bool> saveIsLoggedIn(bool getIsLoggedIn) async {
@@ -69,6 +75,11 @@ class SharedPreferenceHelper {
   static Future<bool?> getIsLoggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(isLoggedInKey);
+  }
+
+   static Future<bool> getIsAdmin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(isAdminKey) ?? false;
   }
 
   // Clear Methods

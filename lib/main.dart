@@ -8,6 +8,7 @@ import 'package:event_booking/Pages/signup.dart';
 import 'package:event_booking/admin/ticketevent.dart';
 import 'package:event_booking/admin/upload_event.dart';
 import 'package:event_booking/services/data.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 // import 'package:event_booking/Pages/detail_page.dart';
 import 'package:flutter/material.dart';
@@ -15,25 +16,35 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 // ignore: unused_import
 import 'Pages/home.dart';
 
+String getCurrentUserId() {
+  return FirebaseAuth.instance.currentUser?.uid ?? '';
+}
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp();
-  
+  WidgetsFlutterBinding.ensureInitialized();  
+  await Firebase.initializeApp();  
   Stripe.publishableKey = publishablekey;
   await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key});  
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',        
+        title: 'Festhub',        
         debugShowCheckedModeBanner: false,
+        // initialRoute: '/home',
+        routes: {
+        '/home': (context) => const Home(),
+        '/upload': (context) => const UploadEvent(),
+        '/bottomnav': (context) {
+          final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+          return BottomNav(userId: userId);
+        },
+      },
         theme: ThemeData(
           // This is the theme of your application.
           //

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore: unused_import
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:event_booking/services/database.dart';
 import 'package:event_booking/services/shared_pref.dart';
 import 'package:intl/intl.dart';
 
 class Booking extends StatefulWidget {
-  const Booking({super.key});
+  final String userId;
+  const Booking({super.key, required this.userId});
 
   @override
   State<Booking> createState() => _BookingState();
@@ -31,8 +33,8 @@ class _BookingState extends State<Booking> {
   }
 
   getBookings() async {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    bookingsStream = await DatabaseMethods().getUserBookings(userId);
+    // String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    bookingsStream = await DatabaseMethods().getUserBookings(widget.userId);
     setState(() {});
   }
 

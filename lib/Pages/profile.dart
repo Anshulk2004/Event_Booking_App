@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:event_booking/services/auth.dart';
+import 'package:event_booking/Pages/signup.dart';
 
 class Profile extends StatefulWidget {
-  // const Profile({super.key});
   final String userId;
   const Profile({super.key, required this.userId});
   
@@ -25,7 +26,6 @@ class _ProfileState extends State<Profile> {
   
   Future<void> fetchUserData() async {
     try {
-      
       if (kDebugMode) {
         print("Fetching data for user ID: ${widget.userId}");
       }
@@ -42,7 +42,6 @@ class _ProfileState extends State<Profile> {
       if (ds.exists && mounted) {
         final data = ds.data() as Map<String, dynamic>;
         setState(() {
-          
           userName = data['Name'] ?? 'Unknown User';
           userEmail = data['Email'] ?? 'No email provided';
           userImage = data['Image'] ?? '';
@@ -70,6 +69,32 @@ class _ProfileState extends State<Profile> {
           userImage = '';
           isLoading = false;
         });
+      }
+    }
+  }
+
+  void handleSignOut() async {
+    try {
+      await AuthMethods().signOut(context);
+      // Navigate to signup page
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SignUp()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error signing out: $e");
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error signing out. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -145,7 +170,6 @@ class _ProfileState extends State<Profile> {
                       ),
                       const SizedBox(height: 30),
 
-
                       // User Info Card
                       Container(
                         width: double.infinity,
@@ -206,7 +230,6 @@ class _ProfileState extends State<Profile> {
                       ),
                       const SizedBox(height: 30),
 
-
                       // Edit Profile Button
                       Container(
                         width: double.infinity,
@@ -236,6 +259,39 @@ class _ProfileState extends State<Profile> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Sign Out Button
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: ElevatedButton(
+                          onPressed: handleSignOut,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.logout, size: 20, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Sign Out',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],

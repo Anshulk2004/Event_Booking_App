@@ -5,6 +5,7 @@ import 'package:event_booking/Pages/booking.dart';
 import 'package:event_booking/Pages/bottomNav.dart';
 import 'package:event_booking/Pages/detail.dart';
 import 'package:event_booking/Pages/signup.dart';
+import 'package:event_booking/admin/ticketevent.dart';
 import 'package:event_booking/admin/upload_event.dart';
 import 'package:event_booking/services/data.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -52,7 +53,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const Booking());
+        home: const SignUp());
   }
 }
 

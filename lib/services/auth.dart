@@ -57,13 +57,14 @@ class AuthMethods {
           )));
       Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
-          context, MaterialPageRoute(builder: (context) => BottomNav()));
+          context, MaterialPageRoute(builder: (context) => BottomNav(
+            userId: userDetails.uid,
+          )));
     });
   }
 
   Future<void> signOut(BuildContext context) async {
     await auth.signOut();
-    await SharedPreferenceHelper.clearUserData(); // Clear stored user data
-    // Navigate to your login screen or wherever needed
+    await SharedPreferenceHelper.clearUserData(); 
   }
 }

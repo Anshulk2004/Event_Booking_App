@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class BottomNav extends StatefulWidget {
-  const BottomNav({super.key});
+  final String userId;
+  const BottomNav({super.key, required this.userId});
 
   @override
   State<BottomNav> createState() => _BottomNavState();
@@ -22,7 +23,7 @@ class _BottomNavState extends State<BottomNav> {
   void initState() {
     home = const Home();
     booking = const Booking();
-    profile = const Profile();
+    profile = Profile(userId: widget.userId);
     pages = [home, booking, profile];
     super.initState();
   }

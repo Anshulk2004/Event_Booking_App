@@ -34,8 +34,7 @@ class DatabaseMethods {
           .collection('tickets')
           .doc(ticketId)
           .set(ticketInfo);
-
-      // Update event ticket count if needed
+      
       if (ticketInfo['eventId'] != null) {
         await FirebaseFirestore.instance
             .collection('Event')
@@ -66,8 +65,7 @@ class DatabaseMethods {
       bookingDetails['bookingId'] = bookingId;
       bookingDetails['createdAt'] = DateTime.now().toIso8601String();
       bookingDetails['status'] = 'confirmed';
-
-      // Save to main bookings collection
+      
       await FirebaseFirestore.instance
           .collection('bookings')
           .doc(bookingId)
@@ -116,7 +114,7 @@ class DatabaseMethods {
         .snapshots();
   }
 
-  // New method to get all tickets for admin
+  
   Future<Stream<QuerySnapshot>> getAllTickets() async {
     return FirebaseFirestore.instance
         .collection('tickets')

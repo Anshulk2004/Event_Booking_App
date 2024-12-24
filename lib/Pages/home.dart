@@ -53,37 +53,28 @@ class _HomeState extends State<Home> {
     setState(() {});
   }
 
-  Widget categoryCards() {
-    return SizedBox(
-      height: 110,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        // physics: const BouncingScrollPhysics(),
-        children: [
-          EventCategoryCard(
-            image: "Images/party.jpg",
-            category: "PARTY",
-          ),
-          EventCategoryCard(
-            image: "Images/party.jpg",
-            category: "SPORTS",
-          ),
-          EventCategoryCard(
-            image: "Images/party.jpg",
-            category: "MUSIC",
-          ),
-          EventCategoryCard(
-            image: "Images/party.jpg",
-            category: "TECH",
-          ),
-          EventCategoryCard(
-            image: "Images/party.jpg",
-            category: "CULTURAL",
-          ),
-        ],
-      ),
-    );
-  }
+  Widget categoryCards() {  
+  final List<Map<String, String>> categories = [
+    {"name": "Party", "image": "Images/party.jpg"},
+    {"name": "Musical Shows", "image": "Images/party.jpg"},
+    {"name": "Comedy Shows", "image": "Images/party.jpg"},
+    {"name": "Fashion Shows", "image": "Images/party.jpg"},
+    {"name": "Movies", "image": "Images/party.jpg"},
+  ];
+
+  return SizedBox(
+    height: 110,
+    child: ListView(
+      scrollDirection: Axis.horizontal,
+      children: categories
+          .map((category) => EventCategoryCard(
+                image: category["image"]!,
+                category: category["name"]!,
+              ))
+          .toList(),
+    ),
+  );
+}
 
   Widget allEvents() {
     return StreamBuilder(
